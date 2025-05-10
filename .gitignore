@@ -8,7 +8,7 @@ composer.lock
 !.env.example
 
 # Config files with sensitive information
-/config/database.php
+#/config/database.php
 
 # Log files
 *.log
@@ -43,8 +43,8 @@ Thumbs.db
 *~
 
 # Database dumps and data
-*.sql
-*.sqlite
+# *.sql
+#*.sqlite
 /database/*.sqlite
 /database/backups/
 
