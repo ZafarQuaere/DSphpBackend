@@ -34,6 +34,7 @@ DSphpBackend/
 │       └── add_item.php    # Add item to cart
 ├── config/                 # Configuration files
 │   ├── database.php        # Database connection
+│   ├── config.php          # Environment configuration
 │   └── jwt.php             # JWT utilities
 ├── models/                 # Data models
 │   ├── User.php            # User model
@@ -43,9 +44,13 @@ DSphpBackend/
 │   └── Order.php           # Order model
 ├── middlewares/            # Middleware functions
 │   └── AuthMiddleware.php  # Authentication middleware
+├── .htaccess               # Apache URL rewriting and CORS
+├── env.example             # Environment variables template
 ├── database.sql            # Database SQL schema
 ├── index.php               # Welcome message
+├── robots.txt              # Robots control file
 ├── API_GUIDE.md            # API documentation
+├── DEPLOYMENT.md           # Deployment guide
 └── README.md               # This file
 ```
 
@@ -70,7 +75,11 @@ mysql -u root -p < database.sql
 
 3. Configure your web server to point to the DSphpBackend directory.
 
-4. Update the database configuration in `config/database.php` if needed.
+4. Update the environment configuration:
+```
+cp env.example .env
+```
+Then edit the `.env` file with your database credentials and JWT secret.
 
 ## Database Setup
 
@@ -85,6 +94,10 @@ It includes:
 ## API Documentation
 
 See the [API Guide](API_GUIDE.md) for detailed information about all available endpoints.
+
+## Deployment
+
+This codebase is configured to be deployed to api.dillistyle.shop. See the [Deployment Guide](DEPLOYMENT.md) for detailed deployment instructions.
 
 ## Testing with Postman
 

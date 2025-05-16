@@ -1,8 +1,8 @@
 -- Create database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS dilli_style;
+CREATE DATABASE IF NOT EXISTS DB_DilliStyle;
 
 -- Use the database
-USE dilli_style;
+USE DB_DilliStyle;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
