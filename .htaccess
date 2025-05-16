@@ -1,0 +1,37 @@
+RewriteEngine On
+
+# Handle CORS preflight requests
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+Header always set Access-Control-Max-Age "3600"
+
+# Handle preflight OPTIONS requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Fix for too many redirects - prevent rewriting for files that exist
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Fix for too many redirects - prevent rewriting for directories that exist
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Rewrite URLs to remove file extensions (only if file doesn't already exist)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# Remove trailing slashes
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# Error handling
+ErrorDocument 404 /index.php
+ErrorDocument 500 /index.php
+
+# Debug - log errors
+php_value error_log /home/b89g9n408x2h/public_html/backend/php_errors.log
+php_value display_errors 0
+php_value log_errors 1 

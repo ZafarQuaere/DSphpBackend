@@ -1,10 +1,15 @@
 <?php
 class JwtUtil {
-    private $key = "dilli_style_secret_key";
+    private $key;
     private $issuer = "dilli_style_api";
     private $audience = "dilli_style_client";
     private $algorithm = 'HS256';
     private $tokenExpiry = 3600; // 1 hour
+
+    public function __construct() {
+        // Get JWT secret key from environment variable
+        $this->key = defined('JWT_SECRET') ? JWT_SECRET : "dilli_style_secret_key";
+    }
 
     // Generate JWT token
     public function generateJwtToken($userId, $username, $email, $role) {

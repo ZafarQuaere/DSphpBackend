@@ -1,11 +1,20 @@
 <?php
 class Database {
-    // Database credentials
-    private $host = "localhost";
-    private $db_name = "dilli_style";
-    private $username = "root";
-    private $password = "";
+    // Database credentials - using environment variables when available
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
     private $conn;
+
+    public function __construct() {
+        // Get database credentials from environment variables if available
+        // Otherwise use default values
+        $this->host = getenv('DB_HOST') ? getenv('DB_HOST') : 'localhost';
+        $this->db_name = getenv('DB_NAME') ? getenv('DB_NAME') : 'DB_DilliStyle';
+        $this->username = getenv('DB_USER') ? getenv('DB_USER') : 'admin_zafar';
+        $this->password = getenv('DB_PASS') ? getenv('DB_PASS') : 'Zafima@20';
+    }
 
     // Get database connection
     public function getConnection() {
