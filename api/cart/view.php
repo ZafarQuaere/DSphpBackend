@@ -69,5 +69,10 @@ while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 http_response_code(200);
 
 // Return cart data
-echo json_encode($cart_arr);
+// echo json_encode($cart_arr); // Old
+echo json_encode(array(
+    "status" => 1,
+    "message" => "Cart retrieved successfully",
+    "data" => $cart_arr
+));
 ?> 

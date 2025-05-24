@@ -18,17 +18,27 @@ $db = $database->getConnection();
 $product = new Product($db);
 
 // Get category name from URL
-$category_name = isset($_GET['name']) ? $_GET['name'] : die();
+$category_name_param = isset($_GET['name']) ? $_GET['name'] : null;
+
+if (is_null($category_name_param)) {
+    http_response_code(400);
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "Category name parameter is missing.",
+        "data" => null
+    ));
+    die(); // exit after sending error
+}
 
 // Get products by category
-$stmt = $product->readByCategory($category_name);
+$stmt = $product->readByCategory($category_name_param);
 $num = $stmt->rowCount();
 
 // Check if more than 0 records found
 if($num > 0) {
     // Products array
-    $products_arr = array();
-    $products_arr["products"] = array();
+    $products_data = array();
+    $products_data["products"] = array();
     
     // Retrieve table contents
     while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -46,19 +56,27 @@ if($num > 0) {
             "created_at" => $created_at
         );
         
-        array_push($products_arr["products"], $product_item);
+        array_push($products_data["products"], $product_item);
     }
     
     // Set response code - 200 OK
     http_response_code(200);
     
     // Show products data in JSON format
-    echo json_encode($products_arr);
+    echo json_encode(array(
+        "status" => 1,
+        "message" => "Products in category '" . $category_name_param . "' retrieved successfully",
+        "data" => $products_data
+    ));
 } else {
     // Set response code - 404 Not found
     http_response_code(404);
     
     // Tell the user no products found
-    echo json_encode(array("message" => "No products found in category: " . $category_name));
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "No products found in category: " . $category_name_param,
+        "data" => null
+    ));
 }
 ?> 

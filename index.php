@@ -11,18 +11,21 @@ try {
     $database = new Database();
     $db = $database->getConnection();
     if (!$db) {
-        echo json_encode([
-            "error" => "Database connection failed", 
-            "details" => "Could not connect to the database"
-        ]);
+        http_response_code(503); // Service Unavailable
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Database connection failed. Could not connect to the database.", 
+            "data" => null
+        ));
         exit;
     }
 } catch (Exception $e) {
-    echo json_encode([
-        "error" => "Exception caught", 
-        "message" => $e->getMessage(),
-        "trace" => $e->getTraceAsString()
-    ]);
+    http_response_code(500); // Internal Server Error
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "Server error during database initialization: " . $e->getMessage(), 
+        "data" => null
+    ));
     exit;
 }
 
@@ -36,10 +39,16 @@ header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+// Default welcome message - make it a success response
+http_response_code(200);
 echo json_encode(array(
+    "status" => 1,
     "message" => "Welcome to " . API_NAME,
-    "version" => API_VERSION,
-    "status" => "Active",
-    "base_url" => BASE_URL
+    "data" => array(
+        "name" => API_NAME,
+        "version" => API_VERSION,
+        "service_status" => "Active", // Renamed from 'status' to avoid conflict with root status
+        "base_url" => BASE_URL
+    )
 ));
 ?> 

@@ -23,7 +23,7 @@ $product->id = isset($_GET['id']) ? $_GET['id'] : die();
 // Read product details
 if($product->readOne()) {
     // Create array
-    $product_arr = array(
+    $product_item = array(
         "id" => $product->id,
         "name" => $product->name,
         "description" => $product->description,
@@ -39,12 +39,20 @@ if($product->readOne()) {
     http_response_code(200);
     
     // Make it json format
-    echo json_encode($product_arr);
+    echo json_encode(array(
+        "status" => 1,
+        "message" => "Product retrieved successfully",
+        "data" => $product_item
+    ));
 } else {
     // Set response code - 404 Not found
     http_response_code(404);
     
     // Tell the user product does not exist
-    echo json_encode(array("message" => "Product does not exist."));
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "Product does not exist.",
+        "data" => null
+    ));
 }
 ?> 

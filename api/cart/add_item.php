@@ -78,19 +78,39 @@ if(
         http_response_code(200);
         
         // Return cart data
-        echo json_encode($cart_arr);
+        echo json_encode(array(
+            "status" => 1,
+            "message" => "Item added to cart successfully",
+            "data" => $cart_arr
+        ));
     } else {
         // Set response code - 503 Service Unavailable
         http_response_code(503);
         
         // Tell the user
-        echo json_encode(array("message" => "Unable to add item to cart."));
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Unable to add item to cart. A service error occurred.",
+            "data" => null
+        ));
     }
 } else {
     // Set response code - 400 Bad Request
     http_response_code(400);
     
-    // Tell the user
-    echo json_encode(array("message" => "Unable to add item to cart. Data is incomplete."));
+    // Build error message based on what's missing
+    $error_msg = "Unable to add item to cart. ";
+    if (empty($data->product_id)) {
+        $error_msg .= "Product ID is required. ";
+    }
+    if (empty($data->quantity) || $data->quantity <= 0) {
+        $error_msg .= "Quantity must be a positive number.";
+    }
+
+    echo json_encode(array(
+        "status" => 0,
+        "message" => trim($error_msg),
+        "data" => null
+    ));
 }
 ?> 

@@ -48,11 +48,13 @@ class AuthMiddleware {
     }
     
     // Format error response
-    private function sendError($message) {
+    private function sendError($message, $http_code = 401) {
         header('Content-Type: application/json');
-        http_response_code(401);
+        http_response_code($http_code);
         echo json_encode(array(
-            "message" => $message
+            "status" => 0,
+            "message" => $message,
+            "data" => null
         ));
         return false;
     }

@@ -32,86 +32,95 @@ try {
     $data = json_decode(file_get_contents("php://input"));
 
     // Make sure data is not empty
-    if(
-        !empty($data->username) &&
-        !empty($data->email) &&
-        !empty($data->password)
-    ) {
-        // Set user property values
-        $user->username = $data->username;
-        $user->email = $data->email;
-        $user->password = $data->password;
-        $user->role = isset($data->role) ? $data->role : "USER";
-        
-        // Validate username and email
-        $errors = array();
-        
-        // Validate username (3-20 characters)
-        if(strlen($user->username) < 3 || strlen($user->username) > 20) {
-            $errors[] = "Username must be between 3 and 20 characters.";
-        }
-        
-        // Validate email format
-        if(!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = "Invalid email format.";
-        }
-        
-        // Validate password (6-40 characters)
-        if(strlen($user->password) < 6 || strlen($user->password) > 40) {
-            $errors[] = "Password must be between 6 and 40 characters.";
-        }
-        
-        // Check if username already exists
-        if($user->usernameExists()) {
-            $errors[] = "Username already exists.";
-        }
-        
-        // Check if email already exists
-        if($user->emailExists()) {
-            $errors[] = "Email already exists.";
-        }
-        
-        // If no errors, create the user
-        if(empty($errors)) {
-            // Create the user
-            if($user->create()) {
-                // Set response code - 201 created
-                http_response_code(201);
-                
-                // Display success message
-                echo json_encode(array("message" => "User was successfully registered."));
-            } else {
-                // Set response code - 503 service unavailable
-                http_response_code(503);
-                
-                // Display error message
-                echo json_encode(array("message" => "Unable to register the user."));
-            }
-        } else {
-            // Set response code - 400 bad request
-            http_response_code(400);
-            
-            // Display error message
-            echo json_encode(array("message" => "Error: " . implode(" ", $errors)));
-        }
-    } else {
-        // Set response code - 400 bad request
-        http_response_code(400);
-        
-        // Display error message
-        echo json_encode(array("message" => "Unable to register the user. Data is incomplete."));
+    $validation_errors = array(); // Use an associative array for field-specific errors
+
+    if (empty($data->username)) {
+        $validation_errors[] = "Username is required.";
     }
-} catch (Exception $e) {
-    // Set response code - 500 server error
-    http_response_code(500);
+    if (empty($data->email)) {
+        $validation_errors[] = "Email is required.";
+    }
+    if (empty($data->password)) {
+        $validation_errors[] = "Password is required.";
+    }
+
+    if (!empty($validation_errors)) {
+        http_response_code(400);
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Validation failed: " . implode(" ", $validation_errors),
+            "data" => null // Changed from "errors" to "data"
+        ));
+        exit;
+    }
     
-    // Show detailed error for debugging
+    // Set user property values
+    $user->username = $data->username;
+    $user->email = $data->email;
+    $user->password = $data->password;
+    $user->role = isset($data->role) ? $data->role : "USER";
+    
+    // Further field-specific validations
+    $validation_errors = array(); // Reset for specific validations
+    if(strlen($user->username) < 3 || strlen($user->username) > 20) {
+        $validation_errors[] = "Username must be between 3 and 20 characters.";
+    }
+    if(!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+        $validation_errors[] = "Invalid email format.";
+    }
+    if(strlen($user->password) < 6 || strlen($user->password) > 40) {
+        $validation_errors[] = "Password must be between 6 and 40 characters.";
+    }
+    if($user->usernameExists()) {
+        $validation_errors[] = "Username already exists.";
+    }
+    if($user->emailExists()) {
+        $validation_errors[] = "Email already exists.";
+    }
+    
+    if (!empty($validation_errors)) {
+        http_response_code(400);
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Validation failed: " . implode(" ", $validation_errors),
+            "data" => null // Changed from "errors" to "data"
+        ));
+        exit;
+    }
+
+    // Create the user
+    if($user->create()) {
+        http_response_code(201);
+        echo json_encode(array(
+            "status" => 1,
+            "message" => "User was successfully registered.",
+            // As per user initial request, data should have id, type, attributes.
+            // Assuming $user->id is populated after creation.
+            "data" => array(
+                "id" => $user->id, // Assuming $user object has id property populated after create()
+                "type" => "user",
+                "attributes" => array(
+                    "username" => $user->username,
+                    "email" => $user->email,
+                    "role" => $user->role
+                )
+            )
+        ));
+    } else {
+        http_response_code(503);
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Unable to register the user. A service error occurred.",
+            "data" => null // Changed from "errors" to "data"
+        ));
+    }
+
+} catch (Exception $e) {
+    http_response_code(500);
     echo json_encode(array(
-        "message" => "Server error occurred.", 
-        "error" => $e->getMessage(),
-        "file" => $e->getFile(),
-        "line" => $e->getLine(),
-        "trace" => $e->getTraceAsString()
+        "status" => 0,
+        "message" => "Server error occurred: " . $e->getMessage(), 
+        "data" => null // Changed from "errors" to "data"
     ));
 }
 ?> 
