@@ -1,0 +1,5 @@
+{
+    "error": "Unauthorized",
+    "message": "Authentication is required and has failed or has not been provided.",
+    "status": 401
+} 
