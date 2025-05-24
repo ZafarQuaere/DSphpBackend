@@ -50,12 +50,20 @@ if($num > 0) {
     http_response_code(200);
     
     // Show products data in JSON format
-    echo json_encode($products_arr);
+    echo json_encode(array(
+        "status" => 1,
+        "message" => "Products retrieved successfully",
+        "data" => $products_arr
+    ));
 } else {
     // Set response code - 404 Not found
     http_response_code(404);
     
     // Tell the user no products found
-    echo json_encode(array("message" => "No products found."));
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "No products found.",
+        "data" => null
+    ));
 }
 ?> 

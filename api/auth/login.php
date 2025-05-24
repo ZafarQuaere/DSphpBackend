@@ -21,50 +21,65 @@ $user = new User($db);
 // Get posted data
 $data = json_decode(file_get_contents("php://input"));
 
-// Make sure data is not empty
-if(!empty($data->username) && !empty($data->password)) {
-    // Set user property values
-    $user->username = $data->username;
-    
-    // Check if username exists and get user details
-    if($user->usernameExists()) {
-        // Verify the password
-        if(password_verify($data->password, $user->password)) {
-            // Create JWT token
-            $jwt = new JwtUtil();
-            $token = $jwt->generateJwtToken($user->id, $user->username, $user->email, $user->role);
-            
-            // Set response code - 200 OK
-            http_response_code(200);
-            
-            // Display JWT token
-            echo json_encode(array(
+// Validate presence of username and password
+$errors = array();
+if (empty($data->username)) {
+    $errors[] = "Username is required.";
+}
+if (empty($data->password)) {
+    $errors[] = "Password is required.";
+}
+
+if (!empty($errors)) {
+    http_response_code(400);
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "Validation failed: " . implode(" ", $errors),
+        "data" => null
+    ));
+    exit; 
+}
+
+// Set user property values
+$user->username = $data->username;
+
+// Check if username exists and get user details
+if($user->usernameExists()) {
+    // Verify the password
+    if(password_verify($data->password, $user->password)) {
+        // Create JWT token
+        $jwt = new JwtUtil();
+        $token = $jwt->generateJwtToken($user->id, $user->username, $user->email, $user->role);
+        
+        http_response_code(200);
+        echo json_encode(array(
+            "status" => 1,
+            "message" => "Login successful.",
+            "data" => array(
                 "token" => $token,
                 "type" => "Bearer",
-                "id" => $user->id,
-                "username" => $user->username,
-                "email" => $user->email,
-                "role" => $user->role
-            ));
-        } else {
-            // Set response code - 401 Unauthorized
-            http_response_code(401);
-            
-            // Display error message
-            echo json_encode(array("message" => "Login failed. Invalid password."));
-        }
+                "user" => array( // Nest user details under a 'user' key for better structure
+                    "id" => $user->id,
+                    "username" => $user->username,
+                    "email" => $user->email,
+                    "role" => $user->role
+                )
+            )
+        ));
     } else {
-        // Set response code - 401 Unauthorized
         http_response_code(401);
-        
-        // Display error message
-        echo json_encode(array("message" => "Login failed. User not found."));
+        echo json_encode(array(
+            "status" => 0,
+            "message" => "Login failed. Invalid username or password.",
+            "data" => null
+        ));
     }
 } else {
-    // Set response code - 400 bad request
-    http_response_code(400);
-    
-    // Display error message
-    echo json_encode(array("message" => "Unable to login. Data is incomplete."));
+    http_response_code(401);
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "Login failed. Invalid username or password.",
+        "data" => null
+    ));
 }
 ?> 

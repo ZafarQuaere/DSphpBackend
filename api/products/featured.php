@@ -24,8 +24,8 @@ $num = $stmt->rowCount();
 // Check if more than 0 records found
 if($num > 0) {
     // Products array
-    $products_arr = array();
-    $products_arr["products"] = array();
+    $products_data = array();
+    $products_data["products"] = array();
     
     // Retrieve table contents
     while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -43,19 +43,27 @@ if($num > 0) {
             "created_at" => $created_at
         );
         
-        array_push($products_arr["products"], $product_item);
+        array_push($products_data["products"], $product_item);
     }
     
     // Set response code - 200 OK
     http_response_code(200);
     
     // Show products data in JSON format
-    echo json_encode($products_arr);
+    echo json_encode(array(
+        "status" => 1,
+        "message" => "Featured products retrieved successfully",
+        "data" => $products_data
+    ));
 } else {
     // Set response code - 404 Not found
     http_response_code(404);
     
     // Tell the user no products found
-    echo json_encode(array("message" => "No featured products found."));
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "No featured products found.",
+        "data" => null
+    ));
 }
 ?> 

@@ -24,8 +24,8 @@ $num = $stmt->rowCount();
 // Check if more than 0 records found
 if($num > 0) {
     // Categories array
-    $categories_arr = array();
-    $categories_arr["categories"] = array();
+    $categories_data = array();
+    $categories_data["categories"] = array();
     
     // Retrieve table contents
     while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -39,19 +39,27 @@ if($num > 0) {
             "created_at" => $created_at
         );
         
-        array_push($categories_arr["categories"], $category_item);
+        array_push($categories_data["categories"], $category_item);
     }
     
     // Set response code - 200 OK
     http_response_code(200);
     
     // Show categories data in JSON format
-    echo json_encode($categories_arr);
+    echo json_encode(array(
+        "status" => 1,
+        "message" => "Categories retrieved successfully",
+        "data" => $categories_data
+    ));
 } else {
     // Set response code - 404 Not found
     http_response_code(404);
     
     // Tell the user no categories found
-    echo json_encode(array("message" => "No categories found."));
+    echo json_encode(array(
+        "status" => 0,
+        "message" => "No categories found.",
+        "data" => null
+    ));
 }
 ?> 
