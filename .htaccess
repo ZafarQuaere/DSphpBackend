@@ -1,37 +1,166 @@
+# Production-ready .htaccess configuration
+# Enable rewrite engine
 RewriteEngine On
 
-# Handle CORS preflight requests
-Header always set Access-Control-Allow-Origin "*"
-Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-Header always set Access-Control-Max-Age "3600"
+# Security Headers
+Header always set X-Frame-Options "DENY"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "no-referrer-when-downgrade"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'none'; style-src 'none'; img-src 'none'; frame-ancestors 'none';"
+Header always unset X-Powered-By
+Header unset X-Powered-By
+
+# HSTS (uncomment when SSL is confirmed working)
+# Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+# CORS Configuration - Dynamic based on environment
+<IfModule mod_headers.c>
+    # Remove any existing CORS headers first
+    Header unset Access-Control-Allow-Origin
+    Header unset Access-Control-Allow-Methods
+    Header unset Access-Control-Allow-Headers
+    
+    # Set CORS headers based on origin
+    SetEnvIf Origin "^https?://(www\.)?(dillistyle\.shop|localhost:3000)$" ALLOWED_ORIGIN=$0
+    Header set Access-Control-Allow-Origin "%{ALLOWED_ORIGIN}e" env=ALLOWED_ORIGIN
+    Header set Access-Control-Allow-Credentials "true" env=ALLOWED_ORIGIN
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" env=ALLOWED_ORIGIN
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With" env=ALLOWED_ORIGIN
+    Header set Access-Control-Max-Age "3600" env=ALLOWED_ORIGIN
+</IfModule>
 
 # Handle preflight OPTIONS requests
 RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^(.*)$ $1 [R=200,L]
+RewriteRule ^(.*)$ - [L,R=204]
 
-# Fix for too many redirects - prevent rewriting for files that exist
+# Deny access to sensitive files
+<FilesMatch "(^\.env|\.git|\.gitignore|composer\.(json|lock)|package\.(json|lock)|README\.md|DEPLOYMENT\.md|PRODUCTION_CHECKLIST\.md|database\.sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to hidden files and directories
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to backup files
+<FilesMatch "\.(bak|backup|log|sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect directories
+Options -Indexes
+Options -ExecCGI
+Options -FollowSymLinks
+
+# Performance: Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+</IfModule>
+
+# Performance: Browser caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/json "access plus 1 hour"
+    ExpiresByType text/html "access plus 1 hour"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+</IfModule>
+
+# URL Rewriting
+# Prevent rewriting for files that exist
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# Fix for too many redirects - prevent rewriting for directories that exist
+# Prevent rewriting for directories that exist
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Rewrite URLs to remove file extensions (only if file doesn't already exist)
+# Remove trailing slashes (except for directories)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# Rewrite URLs to add .php extension if file exists
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.*)$ $1.php [L]
 
-# Remove trailing slashes
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)/$ /$1 [L,R=301]
+# Force HTTPS (uncomment when SSL is confirmed working)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
 # Error handling
-ErrorDocument 404 /index.php
-ErrorDocument 500 /index.php
+ErrorDocument 400 /errors/400.json
+ErrorDocument 401 /errors/401.json
+ErrorDocument 403 /errors/403.json
+ErrorDocument 404 /errors/404.json
+ErrorDocument 500 /errors/500.json
+ErrorDocument 503 /errors/503.json
 
-# Debug - log errors
-php_value error_log /home/b89g9n408x2h/public_html/backend/php_errors.log
-php_value display_errors 0
-php_value log_errors 1 
+# PHP Configuration
+<IfModule mod_php7.c>
+    # Error handling
+    php_flag display_errors Off
+    php_flag display_startup_errors Off
+    php_flag log_errors On
+    php_value error_log logs/php_errors.log
+    
+    # Security
+    php_flag expose_php Off
+    php_flag allow_url_fopen Off
+    php_flag allow_url_include Off
+    php_flag register_globals Off
+    php_flag magic_quotes_gpc Off
+    
+    # Performance
+    php_value memory_limit 128M
+    php_value max_execution_time 30
+    php_value max_input_time 60
+    php_value post_max_size 10M
+    php_value upload_max_filesize 10M
+    
+    # Session security
+    php_flag session.cookie_httponly On
+    php_flag session.cookie_secure On
+    php_value session.cookie_samesite Strict
+</IfModule>
+
+# Prevent script execution in uploads directory (if exists)
+<IfModule mod_rewrite.c>
+    RewriteRule ^uploads/.*\.(php|php3|php4|php5|php7|phtml|pl|py|jsp|asp|sh|cgi)$ - [F,NC]
+</IfModule>
+
+# Rate limiting using mod_ratelimit (if available)
+<IfModule mod_ratelimit.c>
+    SetOutputFilter RATE_LIMIT
+    SetEnv rate-limit 100
+</IfModule>
+
+# Block bad bots and scrapers
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase User-Agent "^.*(bot|crawl|spider).*$" bad_bot
+    Order Allow,Deny
+    Allow from all
+    Deny from env=bad_bot
+</IfModule>
+
+# Custom headers for API responses
+<FilesMatch "\.(php)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch> 

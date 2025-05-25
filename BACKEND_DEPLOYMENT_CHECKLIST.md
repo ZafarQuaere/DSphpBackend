@@ -25,12 +25,12 @@ Follow these steps to deploy this PHP backend to the new subdomain `backend.dill
   ```
   # Database Configuration
   DB_HOST=localhost
-  DB_NAME=your_actual_db_name
-  DB_USER=your_actual_db_user
-  DB_PASS=your_actual_db_password
+  DB_NAME=DB_DilliStyle
+  DB_USER=admin_zafar
+  DB_PASS=Za*****20
 
   # JWT Secret
-  JWT_SECRET=your_secure_jwt_secret
+  JWT_SECRET=aJ5*kL9$pQ2#rT7!zX3@bN6^mV0&cD8%
 
   # API Information
   API_VERSION=1.0.0
@@ -38,6 +38,11 @@ Follow these steps to deploy this PHP backend to the new subdomain `backend.dill
 
   # Base URL
   BASE_URL=https://backend.dillistyle.shop
+
+  # Application Environment
+  APP_ENV=production
+
+  
   ```
 
 ## 4. Database Setup

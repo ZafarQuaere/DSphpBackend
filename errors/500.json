@@ -1,0 +1,5 @@
+{
+    "error": "Internal Server Error",
+    "message": "The server encountered an unexpected condition that prevented it from fulfilling the request.",
+    "status": 500
+} 
