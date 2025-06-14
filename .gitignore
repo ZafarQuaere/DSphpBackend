@@ -5,7 +5,7 @@ composer.lock
 # Environment files
 .env
 .env.*
-!.env.example
+# !.env.example
 
 # Config files with sensitive information
 #/config/database.php
