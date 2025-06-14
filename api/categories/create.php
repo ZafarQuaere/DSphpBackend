@@ -19,42 +19,44 @@ $db = $database->getConnection();
 $category = new Category($db);
 
 // Get posted data
-// Assuming 'name', 'description' are sent via POST and 'image' is the file input
+// Assuming 'name', 'description' are sent via POST and 'category_image' is the file input
 if (
     !empty($_POST['name']) &&
-    !empty($_POST['description']) &&
-    isset($_FILES['image'])
+    !empty($_POST['description'])
 ) {
     // Set category property values
     $category->name = $_POST['name'];
     $category->description = $_POST['description'];
     $category->created_at = date('Y-m-d H:i:s');
 
-    // Handle image upload
-    $image_uploader = new ImageUploader();
-    $upload_result = $image_uploader->upload($_FILES['image']);
-
-    if ($upload_result['status'] === 1) {
-        $category->image_url = $upload_result['data']['image_path'];
-
-        // Create the category
-        if ($category->create()) {
-            http_response_code(201);
-            echo json_encode(array(
-                "status" => 1,
-                "message" => "Category was created.",
-                "data" => array("id" => $db->lastInsertId(), "image_url" => $category->image_url)
-            ));
+    // Handle image upload if provided
+    $category->image_url = null;
+    if (isset($_FILES['category_image']) && $_FILES['category_image']['error'] == 0) {
+        $image_uploader = new ImageUploader();
+        $upload_result = $image_uploader->upload($_FILES['category_image']);
+        if ($upload_result['status'] === 1) {
+            $category->image_url = $upload_result['data']['image_path'];
         } else {
-            http_response_code(503);
-            echo json_encode(array("status" => 0, "message" => "Unable to create category.", "data" => null));
+            http_response_code(400);
+            echo json_encode(array("status" => 0, "message" => $upload_result['message'], "data" => null));
+            exit;
         }
+    }
+
+    // Create the category
+    if ($category->create()) {
+        http_response_code(201);
+        echo json_encode(array(
+            "status" => 1,
+            "message" => "Category was created.",
+            "data" => array("id" => $db->lastInsertId(), "image_url" => $category->image_url)
+        ));
     } else {
-        http_response_code(400);
-        echo json_encode(array("status" => 0, "message" => $upload_result['message'], "data" => null));
+        http_response_code(503);
+        echo json_encode(array("status" => 0, "message" => "Unable to create category.", "data" => null));
     }
 } else {
     http_response_code(400);
-    echo json_encode(array("status" => 0, "message" => "Unable to create category. Data is incomplete or image not provided.", "data" => null));
+    echo json_encode(array("status" => 0, "message" => "Unable to create category. Data is incomplete.", "data" => null));
 }
 ?> 
