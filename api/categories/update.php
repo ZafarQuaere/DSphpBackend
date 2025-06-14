@@ -30,8 +30,8 @@ $category->name = isset($_POST['name']) ? htmlspecialchars(strip_tags($_POST['na
 $category->description = isset($_POST['description']) ? htmlspecialchars(strip_tags($_POST['description'])) : $category->description;
 
 $new_image_uploaded = false;
-if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-    $upload_result = $image_uploader->upload($_FILES['image']);
+if (isset($_FILES['category_image']) && $_FILES['category_image']['error'] == 0) {
+    $upload_result = $image_uploader->upload($_FILES['category_image']);
     if ($upload_result['status'] === 1) {
         $category->image_url = $upload_result['data']['image_path'];
         $new_image_uploaded = true;
