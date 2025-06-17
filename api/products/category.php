@@ -36,27 +36,23 @@ $num = $stmt->rowCount();
 
 // Check if more than 0 records found
 if($num > 0) {
-    // Products array
-    $products_data = array();
-    $products_data["products"] = array();
-    
-    // Retrieve table contents
-    while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $products_arr = array();
+    $products_arr["records"] = array();
+
+    // Load BASE_URL from .env or use default
+    $base_url = getenv('BASE_URL') ?: 'http://localhost:8000';
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         extract($row);
-        
         $product_item = array(
             "id" => $id,
             "name" => $name,
-            "description" => $description,
+            "description" => html_entity_decode($description),
             "price" => $price,
-            "category" => $category_name,
-            "image_url" => $image_url,
-            "stock_quantity" => $stock_quantity,
-            "featured" => (bool)$featured,
-            "created_at" => $created_at
+            "category_id" => $category_id,
+            "image_url" => $image_url ? $base_url . '/' . $image_url : null
         );
-        
-        array_push($products_data["products"], $product_item);
+        array_push($products_arr["records"], $product_item);
     }
     
     // Set response code - 200 OK
@@ -66,7 +62,7 @@ if($num > 0) {
     echo json_encode(array(
         "status" => 1,
         "message" => "Products in category '" . $category_name_param . "' retrieved successfully",
-        "data" => $products_data
+        "data" => $products_arr
     ));
 } else {
     // Set response code - 404 Not found
