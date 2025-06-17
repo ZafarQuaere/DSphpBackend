@@ -27,6 +27,9 @@ if($num > 0) {
     $products_arr = array();
     $products_arr["products"] = array();
     
+    // Load BASE_URL from .env or use default
+    $base_url = getenv('BASE_URL') ?: 'http://localhost:8000';
+
     // Retrieve table contents
     while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         extract($row);
@@ -34,10 +37,11 @@ if($num > 0) {
         $product_item = array(
             "id" => $id,
             "name" => $name,
-            "description" => $description,
+            "description" => html_entity_decode($description),
             "price" => $price,
-            "category" => $category_name,
-            "image_url" => $image_url,
+            "category_id" => $category_id,
+            "category_name" => $category_name,
+            "image_url" => $image_url ? $base_url . '/' . $image_url : null,
             "stock_quantity" => $stock_quantity,
             "featured" => (bool)$featured,
             "created_at" => $created_at

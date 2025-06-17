@@ -65,10 +65,17 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
 // Update the product
 if ($product->update()) {
     http_response_code(200);
+
+    // Load BASE_URL from .env or use default
+    $base_url = getenv('BASE_URL') ?: 'http://localhost:8000';
+
     echo json_encode(array(
         "status" => 1, 
         "message" => "Product was updated.",
-        "data" => array("id" => $product->id, "image_url" => $product->image_url)
+        "data" => array(
+            "id" => $product->id, 
+            "image_url" => $product->image_url ? $base_url . '/' . $product->image_url : null
+        )
     ));
 } else {
     http_response_code(503);

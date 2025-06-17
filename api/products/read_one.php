@@ -22,6 +22,9 @@ $product->id = isset($_GET['id']) ? $_GET['id'] : die();
 
 // Read product details
 if($product->readOne()) {
+    // Load BASE_URL from .env or use default
+    $base_url = getenv('BASE_URL') ?: 'http://localhost:8000';
+
     // Create array
     $product_item = array(
         "id" => $product->id,
@@ -29,7 +32,7 @@ if($product->readOne()) {
         "description" => $product->description,
         "price" => $product->price,
         "category" => $product->category_name,
-        "image_url" => $product->image_url,
+        "image_url" => $product->image_url ? $base_url . '/' . $product->image_url : null,
         "stock_quantity" => $product->stock_quantity,
         "featured" => (bool)$product->featured,
         "created_at" => $product->created_at

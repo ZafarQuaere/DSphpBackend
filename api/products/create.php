@@ -50,10 +50,17 @@ if (
         if ($product->create()) {
             // Set response code - 201 created
             http_response_code(201);
+
+            // Load BASE_URL from .env or use default
+            $base_url = getenv('BASE_URL') ?: 'http://localhost:8000';
+
             echo json_encode(array(
                 "status" => 1,
                 "message" => "Product was created.",
-                "data" => array("id" => $db->lastInsertId(), "image_url" => $product->image_url) 
+                "data" => array(
+                    "id" => $db->lastInsertId(), 
+                    "image_url" => $product->image_url ? $base_url . '/' . $product->image_url : null
+                ) 
             ));
         } else {
             // Set response code - 503 service unavailable
