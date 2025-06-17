@@ -27,6 +27,9 @@ if($num > 0) {
     $categories_data = array();
     $categories_data["categories"] = array();
     
+    // Load BASE_URL from .env or use default
+    $base_url = getenv('BASE_URL') ?: 'http://localhost:8000';
+
     // Retrieve table contents
     while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         extract($row);
@@ -35,7 +38,7 @@ if($num > 0) {
             "id" => $id,
             "name" => $name,
             "description" => $description,
-            "image_url" => $image_url,
+            "image_url" => $image_url ? $base_url . '/' . $image_url : null,
             "created_at" => $created_at
         );
         
